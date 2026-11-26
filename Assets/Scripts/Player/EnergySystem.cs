@@ -33,7 +33,7 @@ namespace PigeonRooftopRush
             Current = Max;
             Wind = WindType.None;
             InWind = false;
-            _lastPercent = 100;
+            _lastPercent = -1; // força o Raise: HUD volta a 100% na nova run
             RaiseEnergy();
         }
 

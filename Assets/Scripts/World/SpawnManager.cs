@@ -107,10 +107,14 @@ namespace PigeonRooftopRush
             if (Random.value < _difficulty.DoubleObstacleChance)
             {
                 // dois obstáculos com corredor garantido (distância >= 2 lanes)
+                string key1 = RandomObstacleKey(false);
+                string key2 = RandomObstacleKey(true);
                 int i = Random.Range(0, 3);
                 int j = i + Random.Range(2, 5 - i);
-                SpawnObstacle(RandomObstacleKey(false), Lanes[i], z);
-                SpawnObstacle(RandomObstacleKey(true), Lanes[j], z);
+                // o fio ocupa o centro (x=0): não colocar o 2º obstáculo em cima
+                if (key1 == "wire" && Lanes[j] == 0) j = 4;
+                SpawnObstacle(key1, Lanes[i], z);
+                SpawnObstacle(key2, Lanes[j], z);
             }
             else
             {

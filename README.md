@@ -100,6 +100,7 @@ Como o código pode ser escrito fora do editor, o repositório traz validação 
 ```bash
 python3 -m pip install --user tree-sitter tree-sitter-c-sharp pyyaml
 python3 tools/validate.py     # 0 = verde: sintaxe C#, .metas, GUIDs, cenas, build settings
+python3 tools/deep_check.py   # 0 = verde: verificação profunda (fileIDs, API de input, eventos, shaders, GDD)
 python3 tools/gen_meta.py     # cria .meta faltantes (idempotente)
 python3 tools/gen_scenes.py   # regenera as 2 cenas a partir do template validado
 ```

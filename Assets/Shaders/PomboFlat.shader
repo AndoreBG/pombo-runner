@@ -12,15 +12,15 @@ Shader "Pombo/Flat"
     {
         Tags
         {
-            "RenderType" = "Opaque"
-            "Queue" = "Geometry"
-            "RenderPipeline" = "UniversalPipeline"
+            "RenderType"="Opaque"
+            "Queue"="Geometry"
+            "RenderPipeline"="UniversalPipeline"
         }
 
         Pass
         {
             Name "ForwardFlat"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode"="UniversalForward" }
 
             HLSLPROGRAM
             #pragma vertex vert

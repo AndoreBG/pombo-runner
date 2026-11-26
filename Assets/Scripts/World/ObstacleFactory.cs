@@ -69,8 +69,10 @@ namespace PigeonRooftopRush
             Sphere(root.transform, new Vector3(0.34f, 0.34f, 0.34f),
                 new Vector3(0f, h + 1.1f, 0f), MaterialFactory.Flat(new Color(0.95f, 0.25f, 0.22f)));
 
-            // colisão "confortável": um pouco mais larga que o mastro fino
+            // colisão "confortável": mastro + base (a base tem 1,6 m — sem o
+            // segundo collider dava para atravessar a visual sem morrer)
             AddBox(root, new Vector3(0.7f, h + 1.4f, 0.7f), new Vector3(0f, (h + 1.4f) * 0.5f, 0f));
+            AddBox(root, new Vector3(1.6f, 1f, 1.6f), new Vector3(0f, 0.5f, 0f));
             AddMarker(root);
             AddBlobShadow(root.transform, 1.6f, 1.6f);
             return root;

@@ -105,7 +105,7 @@ namespace PigeonRooftopRush
                 "No editor: WASD/setas inclinam, Espaço bate asas,\n" +
                 "Shift plana.",
                 28, TextAnchor.UpperCenter, UiFactory.ColorTextDim,
-                center, center, center, new Vector2(0f, 20f), new Vector2(1000f, 440f), true);
+                center, center, center, new Vector2(0f, -10f), new Vector2(1000f, 440f), true);
 
             UiFactory.Btn(panel.transform, "CloseButton", "FECHAR",
                 32, UiFactory.ColorGrey, UiFactory.ColorText,

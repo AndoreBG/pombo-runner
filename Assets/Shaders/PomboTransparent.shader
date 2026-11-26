@@ -11,15 +11,15 @@ Shader "Pombo/Transparent"
     {
         Tags
         {
-            "RenderType" = "Transparent"
-            "Queue" = "Transparent"
-            "RenderPipeline" = "UniversalPipeline"
+            "RenderType"="Transparent"
+            "Queue"="Transparent"
+            "RenderPipeline"="UniversalPipeline"
         }
 
         Pass
         {
             Name "ForwardTransparent"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode"="UniversalForward" }
 
             Blend SrcAlpha OneMinusSrcAlpha
             ZWrite Off

@@ -21,7 +21,9 @@ namespace PigeonRooftopRush
             {
                 // direção LUMINOSA (superficie -> luz) = -forward da luz
                 Shader.SetGlobalVector("_PomboLightDir", -sun.transform.forward);
-                Color lit = sun.color * sun.intensity;
+                // intensity do template = 2; o lambert próprio trabalha em
+                // 0..1 (+ ambiente 0,34) — sem o *0.5 as faces claras clipam
+                Color lit = sun.color * (sun.intensity * 0.5f);
                 Shader.SetGlobalColor("_PomboLightColor",
                     new Color(lit.r, lit.g, lit.b, 1f));
             }

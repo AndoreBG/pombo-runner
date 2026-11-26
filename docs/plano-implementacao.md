@@ -283,6 +283,7 @@ Assets/Scenes/gameplay.unity            ← REMOVIDO (era só a cena template va
 tools/gen_scenes.py                     gera as 2 cenas (copia blocos do template)
 tools/gen_meta.py                       gera .meta com GUIDs únicos
 tools/validate.py                       E3 — validação estática
+tools/deep_check.py                     verificação profunda (fileIDs, API, eventos, globals, GDD)
 docs/plano-implementacao.md             este documento
 README.md                               instruções (abrir, controles, build Android)
 docs/gdd.md                             GDD final do Projeto 2
@@ -362,7 +363,7 @@ no editor e no aparelho, me manda erros/console → eu corrijo (F9′).
 
 ## 8. Plano de validação (resumo — detalhado em `docs/plano-de-testes.md`)
 
-1. **Estático (eu, agora):** `tools/validate.py` → sintaxe, metas, GUIDs, cenas, build settings.
+1. **Estático (eu, agora):** `tools/validate.py` → sintaxe, metas, GUIDs, cenas, build settings; `tools/deep_check.py` → fileIDs de cena, API de `IFlightInput`, pareamento de eventos, calls×definições, globals dos shaders e constantes vs. GDD.
 2. **Editor (usuário):** abrir projeto → sem erros de importação → Play no `MainMenu`
    → JOGAR → calibrar → jogar → colidir → GameOver → reiniciar/menu.
 3. **Dispositivo (usuário):** build Android → verificar eixos do tilt, calibragem,

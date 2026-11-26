@@ -51,6 +51,22 @@ Voar → desviar → coletar (correntes) → gerenciar energia → aumentar scor
 
 `WASD`/setas = inclinar · `Espaço` = tap · `Shift` = hold.
 
+### 4.4 Parâmetros de voo (tuning do MVP)
+
+| Parâmetro | Valor | Efeito |
+|---|---|---|
+| Velocidade lateral (`strafeSpeed`) | 6,5 m/s | resposta do tilt em X |
+| Empuxo do tilt (`tiltLiftAccel`) | 26 m/s² | quanto o tilt Y acelera a subida |
+| Gravidade normal | 9,5 m/s² | queda em voo normal |
+| Gravidade planando (`gravityGlide`) | 2,4 m/s² | queda ao segurar (planar) |
+| Impulso do flap (`flapBoost`) | +6,5 m/s | subida por toque (limitada a 9 m/s) |
+| Subida máxima / mergulho | 9 / 12 m/s | limites de vy |
+| Limites laterais / altitude | X ±7,5 · Y 0,6–22 | caixas de voo (chão/teto) |
+| `fixedDeltaTime` | 60 Hz | evita atravessar fios a 24 m/s |
+
+Fatores de corrente sobre a gravidade: **azul ×0,3** · **vermelha ×1,6**
+(tanto no voo normal quanto planando).
+
 ## 5. Energia
 
 Energia 0–100, começa cheia. **Sem energia não há morte direta**: o flap é bloqueado e

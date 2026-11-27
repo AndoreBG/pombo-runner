@@ -1,8 +1,14 @@
 # Pombo Runner
 
-Desenvolvi o Pombo Runner como um endless flyer arcade 3D para Android. Minha ideia é transformar o celular em um controle de voo: o jogador inclina o aparelho para conduzir o pombo, toca para bater asas e segura para planar. Durante a partida, ele desvia de obstáculos, administra energia, aproveita correntes de ar e acumula pontos.
+Pombo Runner como um endless flyer arcade 3D para Android. Minha ideia é transformar o celular em um controle de voo: o jogador inclina o aparelho para conduzir o pombo, toca para bater asas e segura para planar. Durante a partida, ele desvia de obstáculos, administra energia, aproveita correntes de ar e acumula pontos.
 
 [ACESSE AQUI PARA BAIXAR E JOGAR!](https://github.com/AndoreBG/pombo-runner/releases/tag/1.0.0)
+
+## Integrantes do grupo
+- 010 - André Bolandim Gorzoni
+- 049 - Leonardo Trevisan
+- 035 - Miguel Arcanjo Pellizzari Baldo
+- 005 - Vitor Mathias Rodrigues dos Santos
 
 ## Controles
 

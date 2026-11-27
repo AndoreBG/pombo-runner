@@ -4,13 +4,6 @@ Desenvolvi o Pombo Runner como um endless flyer arcade 3D para Android. Minha id
 
 O projeto foi configurado para **Unity 6000.3.18f1**, URP e Android em paisagem. O [enunciado](docs/enunciado-projeto.pdf) apresenta o Projeto 2, que serviu de referência para meu trabalho.
 
-## Como abrir
-
-1. Instale o Unity Hub e o Unity **6000.3.18f1**, com Android Build Support, SDK, NDK e OpenJDK.
-2. No Unity Hub, escolha **Add → Add project from disk** e selecione a pasta do projeto.
-3. Aguarde a importação dos pacotes e abra `Assets/Scenes/MainMenu.unity`.
-4. Pressione **Play**. No Editor, use teclado para controlar o voo.
-
 ## Controles
 
 | Ação | Celular | Editor |
@@ -86,6 +79,3 @@ Reuni aqui os principais arquivos da entrega:
 | Arquitetura e diagrama | [Descrição](docs/arquitetura.md) · [SVG](docs/diagrama-arquitetura.svg) · [PNG](docs/diagrama-arquitetura.png) |
 | Testes | [Relatório editável](docs/relatorio-de-testes.docx) · [PDF](docs/relatorio-de-testes.pdf) · [Plano](docs/plano-de-testes.md) |
 | Post-mortem | [Markdown](docs/post-mortem.md) · [Word](docs/post-mortem.docx) · [PDF](docs/post-mortem.pdf) |
-| Apresentação | [Slides](docs/apresentacao-final.pptx) · [PDF](docs/apresentacao-final.pdf) · [Roteiro](docs/apresentacao.md) |
-| Entrega | [Checklist](docs/entrega-final.md) · [Roteiro do vídeo](docs/roteiro-video.md) · [Verificações](docs/verificacoes.md) |
-| Desenvolvimento | [Plano de implementação](docs/plano-implementacao.md) |

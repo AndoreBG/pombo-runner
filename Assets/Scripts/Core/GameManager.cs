@@ -11,12 +11,7 @@ namespace PigeonRooftopRush
         GameOver
     }
 
-    // ---------------------------------------------------------------------
-    // GameManager — singleton e State Machine da run (padrão do PDF).
-    // É o composition root: recebe todas as referências do GameBootstrap e
-    // orquestra o loop Playing (input -> dificuldade -> spawn -> score ->
-    // energia -> movimento do mundo).
-    // ---------------------------------------------------------------------
+
     public sealed class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
@@ -102,17 +97,18 @@ namespace PigeonRooftopRush
 
         private void OnDestroy()
         {
+            if (FlightInput is System.IDisposable disposable) disposable.Dispose();
             if (Instance == this) Instance = null;
         }
 
         private void OnCrash(CrashEvent evt)
         {
-            // deferido: evita trocar estado/UI dentro de callback de fisica
+
             _pendingCrash = true;
             _pendingCrashReason = evt.Reason;
         }
 
-        // --------------------------------------------------------- fluxo
+
         public void StartCalibration()
         {
             State = GameState.Calibrating;
@@ -126,8 +122,7 @@ namespace PigeonRooftopRush
         {
             if (State != GameState.Calibrating) return;
 
-            // captura precisa do neutro no instante do toque (com refinamento
-            // exponencial de ~0,5 s dentro do próprio MobileTiltInput)
+
             FlightInput.Calibrate();
 
             State = GameState.Playing;
@@ -174,7 +169,7 @@ namespace PigeonRooftopRush
             SceneManager.LoadScene("MainMenu");
         }
 
-        // --------------------------------------------------------- update
+
         private void Update()
         {
             if (_pendingCrash && State == GameState.Playing)
@@ -189,7 +184,7 @@ namespace PigeonRooftopRush
                     TickPlaying(Time.deltaTime);
                     break;
                 case GameState.Calibrating:
-                    // alimenta a leitura crua exibida no CalibrationUI
+
                     FlightInput.Tick();
                     break;
             }
@@ -218,10 +213,9 @@ namespace PigeonRooftopRush
         {
             if (_cameraTransform == null || _playerTransform == null) return;
 
-            float followX = _playerTransform.position.x * 0.55f;
-            var desired = new Vector3(followX, 6f, -10f);
+            var desired = new Vector3(0f, 6f, -10f);
 
-            // tremor enquanto estiver na corrente de turbulência
+
             bool turbulence = State == GameState.Playing &&
                               Energy != null && Energy.InWind &&
                               Energy.Wind == WindType.Turbulence;

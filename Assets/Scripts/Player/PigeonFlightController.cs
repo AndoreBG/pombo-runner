@@ -2,20 +2,13 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // PigeonFlightController — voo arcade 3D do MVP.
-    // O mundo desliza em -Z (SpawnManager/GameManager); o pombo fica em z=0.
-    //   tilt X  -> velocidade lateral
-    //   tilt Y  -> aceleração vertical (com gravidade constante)
-    //   tap     -> impulso de subida (consome energia)
-    //   hold    -> planar (gravidade reduzida)
-    // Correntes de ar alteram a gravidade (azul x0.3 / vermelha x1.6).
-    // ---------------------------------------------------------------------
+
+
     [RequireComponent(typeof(Rigidbody))]
     public sealed class PigeonFlightController : MonoBehaviour
     {
         [Header("Movel")]
-        public float strafeSpeed = 6.5f;
+        public float strafeSpeed = 10f;
         public float tiltLiftAccel = 26f;
         public float gravityNormal = 9.5f;
         public float gravityGlide = 2.4f;
@@ -35,6 +28,7 @@ namespace PigeonRooftopRush
         public Transform ModelRoot;
         public Transform WingLeft;
         public Transform WingRight;
+        public Camera FlightCamera;
 
         public bool ControlsEnabled { get; set; }
         public bool IsGliding { get; private set; }
@@ -72,7 +66,7 @@ namespace PigeonRooftopRush
             var pos = _rb.position;
             pos.y = 6f;
             pos.z = 0f;
-            pos.x = Mathf.Clamp(pos.x, -boundsX, boundsX);
+            pos.x = 0f;
             _rb.position = pos;
         }
 
@@ -87,7 +81,7 @@ namespace PigeonRooftopRush
             float dt = Time.fixedDeltaTime;
             Vector2 steer = InputSource.Steer;
 
-            // ---- gravidade com modificadores de corrente de ar ----
+
             float gravity = gravityNormal;
             bool inAscending = Energy != null && Energy.InWind && Energy.Wind == WindType.Ascending;
             bool inTurbulence = Energy != null && Energy.InWind && Energy.Wind == WindType.Turbulence;
@@ -97,7 +91,7 @@ namespace PigeonRooftopRush
             IsGliding = InputSource.GlideHeld;
             if (IsGliding) gravity = gravityGlide * (inAscending ? 0.3f : inTurbulence ? 1.6f : 1f);
 
-            // turbulência sacode o controle
+
             float steerX = steer.x;
             if (inTurbulence)
                 steerX += Mathf.Sin(Time.time * 13.1f) * 0.16f;
@@ -105,8 +99,8 @@ namespace PigeonRooftopRush
             _vy -= gravity * dt;
             _vy += steer.y * tiltLiftAccel * dt;
 
-            // ---- tap: bater asas ----
-            if (InputSource.FlapPressed)
+
+            if (InputSource.ConsumeFlap())
             {
                 if (Energy != null && Energy.TryConsumeFlap())
                 {
@@ -122,15 +116,18 @@ namespace PigeonRooftopRush
 
             _vy = Mathf.Clamp(_vy, -maxDive, maxClimb);
 
-            // ---- integração ----
+
             Vector3 pos = _rb.position;
             float vx = Mathf.Clamp(steerX, -1.5f, 1.5f) * strafeSpeed;
-            pos.x += vx * dt;
+            pos.x = Mathf.Clamp(pos.x + vx * dt, -boundsX, boundsX);
             pos.y += _vy * dt;
             pos.z = 0f;
 
-            if (pos.x < -boundsX) { pos.x = -boundsX; }
-            else if (pos.x > boundsX) { pos.x = boundsX; }
+            float lowerY = minY;
+            float upperY = maxY;
+            float cameraY;
+            if (TryViewportY(0.05f, out cameraY)) lowerY = Mathf.Max(minY, cameraY);
+            if (TryViewportY(0.93f, out cameraY)) upperY = Mathf.Max(lowerY, cameraY);
 
             if (pos.y <= minY)
             {
@@ -138,15 +135,31 @@ namespace PigeonRooftopRush
                 if (_vy < 0f) GroundTouched = true;
                 _vy = 0f;
             }
-            else if (pos.y >= maxY)
+            else if (pos.y <= lowerY)
             {
-                pos.y = maxY;
+                pos.y = lowerY;
+                if (_vy < 0f) _vy = 0f;
+            }
+            else if (pos.y >= upperY)
+            {
+                pos.y = upperY;
                 if (_vy > 0f) _vy = 0f;
             }
 
-            // MovePosition (sem velocity): integração determinística p/ arcade,
-            // colisões de trigger disparam normalmente com o RB dinâmico.
+
             _rb.MovePosition(pos);
+        }
+
+        private bool TryViewportY(float viewportY, out float worldY)
+        {
+            worldY = 0f;
+            if (FlightCamera == null) return false;
+            Ray ray = FlightCamera.ViewportPointToRay(new Vector3(0.5f, viewportY, 0f));
+            Plane playerPlane = new Plane(Vector3.forward, Vector3.zero);
+            float distance;
+            if (!playerPlane.Raycast(ray, out distance)) return false;
+            worldY = ray.GetPoint(distance).y;
+            return true;
         }
 
         private void Update()
@@ -159,9 +172,7 @@ namespace PigeonRooftopRush
             _visualSteer = Vector2.Lerp(_visualSteer, steer,
                 1f - Mathf.Exp(-visualSmoothing * Time.deltaTime));
 
-            // roll inclina para o lado do steer; pitch segue a velocidade
-            // vertical (subir = nariz para cima, mergulhar = nariz p/ baixo,
-            // com menos intensidade para nao parecer um capotamento)
+
             float roll = -_visualSteer.x * rollDegrees;
             float pitchRaw = _vy >= 0f ? -_vy * 2.2f : -_vy * 1.2f;
             float pitch = Mathf.Clamp(pitchRaw, -pitchDegrees, pitchDegrees);

@@ -6,11 +6,8 @@ using UnityEngine.UI;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // UiFactory — helpers para construir uGUI em runtime (necessário pela
-    // estratégia E1: sem prefabs de UI authorados à mão).
-    // Canvas de referência: 1600 x 900 (paisagem).
-    // ---------------------------------------------------------------------
+
+
     public static class UiFactory
     {
         private static Font _font;

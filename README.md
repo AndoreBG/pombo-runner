@@ -1,129 +1,91 @@
-# 🏙 Pigeon Rooftop Rush — Projeto 2
+# Pombo Runner
 
-**Endless flyer arcade 3D para Android** em que o smartphone vira o controle de voo:
-incline o aparelho para virar, subir e mergulhar; toque para bater asas; segure para
-planar. Desvie de prédios, antenas, fios, outdoors e árvores, aproveite correntes de ar
-e leve o pombo o mais longe possível.
+Desenvolvi o Pombo Runner como um endless flyer arcade 3D para Android. Minha ideia é transformar o celular em um controle de voo: o jogador inclina o aparelho para conduzir o pombo, toca para bater asas e segura para planar. Durante a partida, ele desvia de obstáculos, administra energia, aproveita correntes de ar e acumula pontos.
 
-> Projeto 2 do desafio de jogos móveis (veja o enunciado em anexo e o
-> [GDD completo](docs/gdd.md)). Engine: **Unity 6000.3.18f1 (URP)**.
+O projeto foi configurado para **Unity 6000.3.18f1**, URP e Android em paisagem. O [enunciado](docs/enunciado-projeto.pdf) apresenta o Projeto 2, que serviu de referência para meu trabalho.
 
-## 📁 Como abrir
+## Como abrir
 
-1. Instale o **Unity Hub** e a edição **6000.3.18f1** (a versão exata do projeto —
-   outras versões 6000.x podem abrir, mas não são testadas).
-2. `Add → Add project from disk` nesta pasta e abra o projeto.
-3. Aguarde a importação inicial (URP + Input System já estão no `Packages/manifest.json`).
-4. Abra a cena **`Assets/Scenes/MainMenu.unity`** e aperte **Play**.
+1. Instale o Unity Hub e o Unity **6000.3.18f1**, com Android Build Support, SDK, NDK e OpenJDK.
+2. No Unity Hub, escolha **Add → Add project from disk** e selecione a pasta do projeto.
+3. Aguarde a importação dos pacotes e abra `Assets/Scenes/MainMenu.unity`.
+4. Pressione **Play**. No Editor, use teclado para controlar o voo.
 
-> **Dica:** o projeto usa *Enter Play Mode Options* com domain reload desligado
-> (configuração do template). Tudo continua funcionando — os handlers do EventBus são
-> removidos em `OnDisable` — mas se notar comportamento estranho após muitos Plays,
-> desligue e ligue `Edit → Preferences → Enter Play Mode Options`.
+## Controles
 
-## 🎮 Controles
-
-| Ação | Celular | Editor (teclado) |
+| Ação | Celular | Editor |
 |---|---|---|
-| Virar ← / → | inclinar o aparelho | `A`/`D` ou setas |
-| Subir / mergulhar | inclinar ↑ / ↓ | `W`/`S` ou setas |
-| Bater asas | **toque** na tela | `Espaço` |
-| Planar | **segure** o toque (> 0,22 s) | `Shift` |
+| Mover lateralmente | Inclinar para a esquerda ou direita; no neutro, o movimento lateral para | `A`/`D` ou setas |
+| Subir ou mergulhar | Inclinar no eixo vertical | `W`/`S` ou setas |
+| Bater asas | Toque curto | `Espaço` |
+| Planar | Segurar por mais de 0,22 s | `Shift` |
 
-**Calibragem:** cada partida começa com um overlay — segure o aparelho na posição
-natural e toque em **COMEÇAR**. Se os eixos saírem trocados no seu aparelho, use os
-botões **INVERTER X / INVERTER Y / TROCAR EIXOS** ali mesmo (afeta apenas a sessão).
-Para mudar o padrão permanentemente, ajuste `invertX/invertY/swapXY` em
-`Assets/Scripts/Input/SensorCalibration.cs`.
+Na calibragem, seguro o aparelho na posição desejada e uso **ZERAR X/Y** para definir o neutro. Posso ajustar a direção com **INVERTER X**, **INVERTER Y** e **TROCAR EIXOS**, sem perder essas escolhas ao zerar. Depois, seleciono **COMEÇAR**. Os ajustes de eixos valem para a sessão.
 
-## 🏗️ Build Android (APK)
+Na implementação, uso `GravitySensor` quando há leitura válida e `Accelerometer` como alternativa. Quando disponível, o giroscópio ajuda a detectar rotação durante o refinamento da calibragem. Os padrões dos eixos, a sensibilidade `1.2` e a zona morta `0.14` ficam em `Assets/Scripts/Input/SensorCalibration.cs`; a velocidade lateral padrão de `10 m/s` fica em `PigeonFlightController.cs`.
 
-1. `File → Build Settings`.
-2. Selecione **Android** → **Switch Platform**.
-3. Verifique em `Player Settings`:
-   - Orientation: **Landscape Left/Right** (o projeto já vem configurado só-paisagem);
-   - Scripting Backend: **IL2CPP** + Target Architectures: **ARM64** (já configurado);
-   - Package Name: `com.pomborunner.pigeonrooftoprush` (já configurado).
-4. Instale pelo Hub os módulos **Android Build Support + SDK + NDK + OpenJDK** se ainda
-   não tiver.
-5. **Build** (ou Build And Run com o aparelho em depuração USB).
-   - Para testar rápido: **Build Settings → Build** gera o `.apk`; instale tocando nele
-     no aparelho.
+## Como gerar a build Android
 
-## 🕹️ O que está no MVP
+1. Abra **File → Build Profiles** (ou **Build Settings**) e selecione Android em **Switch Platform**.
+2. Confira as cenas `MainMenu` e `Game`, nessa ordem, na lista do perfil.
+3. Em Player Settings, confira **Input System Package (New)** em Active Input Handling, orientação paisagem, backend **IL2CPP** e arquitetura **ARM64**. Não use `Both` para Android.
+4. Confira o identificador `com.pomborunner.pigeonrooftoprush` e escolha **Build**. Para APK, mantenha Build App Bundle desativado; para AAB, ative-o. O AAB não é instalado diretamente como um APK.
+5. Para executar no aparelho, instale o APK ou use **Build And Run** com o Android autorizado. Associe a versão entregue aos testes e ao vídeo.
 
-- Voo 3D arcade com **inclinação do aparelho** (acelerômetro compensado + giroscópio) e
-  **calibragem**;
-- **5 obstáculos**: prédio, antena, fio elétrico, outdoor, árvore;
-- **2 correntes de ar**: azul (sobe + recupera energia) e vermelha (tremor + drena);
-- **Energia** com decisões (voar × planar × correntes);
-- **Score** (distância + bônus) e recorde em `PlayerPrefs`;
-- **Object pooling** em todos os spawns;
-- Cenas **MainMenu + Game** (game over como overlay);
-- **Build Android** paisagem com todas as configurações prontas.
+## O que implementei
 
-Itens do GDD deixados para pós-MVP (power-ups, 5 zonas, haptics, áudio, drones etc.)
-estão listados em [`docs/gdd.md`](docs/gdd.md).
+- Voo com sensores e calibragem, além de controles de teclado para o Editor.
+- Cinco obstáculos: prédio, antena, fio elétrico, outdoor e árvore.
+- Corrente azul, que restaura a energia a 100%, e corrente vermelha, que desconta 25 pontos por entrada.
+- Energia, pontuação, recorde, dificuldade progressiva e reutilização de objetos com pooling.
+- Menu, tela de calibragem, HUD e tela de fim de jogo.
 
-## 🗂️ Estrutura do projeto
+Deixei áudio, haptics, swipes, power-ups, corrente verde, novas áreas e obstáculos adicionais para depois do MVP. Detalhei o escopo em [GDD](docs/gdd.md).
 
-```
-Assets/
-├── Scenes/
-│   ├── MainMenu.unity        # YAML mínimo + MainMenuBootstrap
-│   └── Game.unity            # YAML mínimo + GameBootstrap
-├── Shaders/
-│   ├── PomboFlat.shader      # lambert próprio (luz/nevoa via globals)
-│   └── PomboTransparent.shader
-├── Settings/                 # assets URP do template (mobile/PC)
-└── Scripts/
-    ├── Core/     GameManager, EventBus, MaterialFactory
-    ├── Input/    IFlightInput, MobileTiltInput, EditorInput, SensorCalibration
-    ├── Player/   PigeonFlightController, EnergySystem, CollisionHandler, PigeonBuilder
-    ├── World/    SpawnManager, ObjectPool, WindZone, ObstacleFactory, WorldBuilder,
-    │             ObstacleMarker
-    ├── Gameplay/ ScoreManager, DifficultyManager
-    ├── UI/       HUD, CalibrationUI, MainMenuUI, UiFactory
-    └── Boot/     GameBootstrap, MainMenuBootstrap
-```
+## Estrutura
 
-**Arquitetura em uma frase:** as cenas YAML contêm apenas câmera/luz/volume/bootstrap;
-todo o resto (jogador, pools, HUD, cenário) é montado **em runtime** pelos bootstraps —
-isso elimina erros de referência/GUID autorados à mão e deixa o jogo 100% versionável
-sem depender de biblioteca gerada. Detalhes e diagramas em
-[`docs/arquitetura.md`](docs/arquitetura.md).
+- `Assets/Scenes`: cenas `MainMenu` e `Game`.
+- `Assets/Scripts`: sistemas de voo, entrada, jogo, interface, mundo e montagem.
+- `Assets/Shaders` e `Assets/Settings`: shaders e configurações visuais.
+- `Packages` e `ProjectSettings`: pacotes e configurações do projeto Unity.
+- `docs`: GDD, arquitetura, testes, post-mortem, apresentação e roteiro de vídeo.
+- `tools`: validadores, testes simulados e geração dos documentos.
 
-## 🛠️ Ferramentas (validação sem Unity)
+## Verificações adicionais
 
-Como o código pode ser escrito fora do editor, o repositório traz validação estática:
+Além dos testes que realizei no jogo, posso repetir as verificações estáticas e a simulação de lógica abaixo. Elas não substituem a execução real no Unity ou no aparelho.
 
 ```bash
 python3 -m pip install --user tree-sitter tree-sitter-c-sharp pyyaml
-python3 tools/validate.py     # 0 = verde: sintaxe C#, .metas, GUIDs, cenas, build settings
-python3 tools/deep_check.py   # 0 = verde: verificação profunda (fileIDs, API de input, eventos, shaders, GDD)
-python3 tools/gen_meta.py     # cria .meta faltantes (idempotente)
-python3 tools/gen_scenes.py   # regenera as 2 cenas a partir do template validado
+python3 tools/validate.py
+python3 tools/deep_check.py
+mcs -langversion:latest -out:/tmp/pombo-testes.exe tools/testes/LogicaSimulada.cs Assets/Scripts/Player/EnergySystem.cs Assets/Scripts/Input/IFlightInput.cs Assets/Scripts/Input/SensorCalibration.cs Assets/Scripts/Input/MobileTiltInput.cs Assets/Scripts/Input/EditorInput.cs Assets/Scripts/Player/PigeonFlightController.cs
+mono /tmp/pombo-testes.exe
 ```
 
-## 📖 Documentos
+Para gerar novamente os documentos editáveis e o diagrama, instalo `python-docx`, `python-pptx` e `PyMuPDF` e executo `python3 tools/gerar_entrega.py`. **O gerador sobrescreve** os documentos e diagramas gerados; faço uma cópia antes de preencher informações ou editar a apresentação. Posso exportar os PDFs separadamente no LibreOffice.
 
-| Documento | Conteúdo |
+## Documentação
+
+Reuni aqui os principais arquivos da entrega:
+
+- [Diagrama da arquitetura — diagrama-arquitetura.png](docs/diagrama-arquitetura.png)
+- [GDD final — gdd-final.pdf](docs/gdd-final.pdf)
+- [Post-mortem — post-mortem.pdf](docs/post-mortem.pdf)
+- [Relatório de testes — relatorio-de-testes.pdf](docs/relatorio-de-testes.pdf)
+
+### Diagrama da arquitetura
+
+![Diagrama da arquitetura do Pombo Runner](docs/diagrama-arquitetura.png)
+
+### Outros formatos e materiais
+
+| Material | Arquivo |
 |---|---|
-| [`docs/gdd.md`](docs/gdd.md) | GDD final do Projeto 2 |
-| [`docs/arquitetura.md`](docs/arquitetura.md) | Diagramas (Mermaid) e padrões |
-| [`docs/plano-implementacao.md`](docs/plano-implementacao.md) | Plano de implementação seguido |
-| [`docs/plano-de-testes.md`](docs/plano-de-testes.md) | Checklist de teste em dispositivo |
-| [`docs/post-mortem-template.md`](docs/post-mortem-template.md) | Template de post-mortem |
-| [`docs/apresentacao.md`](docs/apresentacao.md) | Roteiro da apresentação (~10 min) |
-
-## ⚠️ Notas de teste
-
-- **Eixos do tilt:** o mapeamento usa `Input.compensatingSensors` + calibragem; os
-  padrões `invertX/invertY` foram derivados analiticamente e **precisam de confirmação
-  em dispositivo** (item 1 do plano de testes). O CalibrationUI mostra os eixos ao vivo
-  e permite inverter em dispositivo.
-- **Colisões finas:** `fixedDeltaTime` foi fixado em 60 Hz e os fios têm 0,5 m de
-  espessura para evitar tunelamento a 24 m/s.
-- Este ambiente de desenvolvimento não tem Unity: o projeto foi validado estaticamente
-  (sintaxe via tree-sitter, GUIDs e cenas via `tools/validate.py`). Qualquer erro de
-  compilação/console reportado é corrigido na sequência.
+| GDD | [Markdown](docs/gdd.md) · [Word](docs/gdd-final.docx) · [PDF](docs/gdd-final.pdf) |
+| Arquitetura e diagrama | [Descrição](docs/arquitetura.md) · [SVG](docs/diagrama-arquitetura.svg) · [PNG](docs/diagrama-arquitetura.png) |
+| Testes | [Relatório editável](docs/relatorio-de-testes.docx) · [PDF](docs/relatorio-de-testes.pdf) · [Plano](docs/plano-de-testes.md) |
+| Post-mortem | [Markdown](docs/post-mortem.md) · [Word](docs/post-mortem.docx) · [PDF](docs/post-mortem.pdf) |
+| Apresentação | [Slides](docs/apresentacao-final.pptx) · [PDF](docs/apresentacao-final.pdf) · [Roteiro](docs/apresentacao.md) |
+| Entrega | [Checklist](docs/entrega-final.md) · [Roteiro do vídeo](docs/roteiro-video.md) · [Verificações](docs/verificacoes.md) |
+| Desenvolvimento | [Plano de implementação](docs/plano-implementacao.md) |

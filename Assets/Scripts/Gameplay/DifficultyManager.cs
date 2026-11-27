@@ -1,17 +1,13 @@
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // DifficultyManager — progressão da run (curvas do plano §4.3):
-    //   velocidade     9 -> 24 m/s em ~150 s
-    //   spawn          1.55 s -> 0.62 s em ~120 s
-    //   2 obstáculos   0% -> 45% em ~150 s
-    //   correntes      8 s -> 5 s
-    // ---------------------------------------------------------------------
+
+
     public sealed class DifficultyManager
     {
         private const float SpeedMin = 9f;
         private const float SpeedMax = 24f;
-        private const float SpeedRampSeconds = 150f;
+        private const float SpeedRampSeconds = 75f;
+        private const float OtherDifficultyRampSeconds = 150f;
         private const float SpawnMin = 1.55f;
         private const float SpawnMax = 0.62f;
         private const float SpawnRampSeconds = 120f;
@@ -32,7 +28,7 @@ namespace PigeonRooftopRush
             Recompute();
         }
 
-        /// <summary>Avança o tempo e retorna a velocidade atual do mundo.</summary>
+
         public float Tick(float dt)
         {
             Elapsed += dt;
@@ -44,11 +40,12 @@ namespace PigeonRooftopRush
         {
             float tSpeed = Clamp01(Elapsed / SpeedRampSeconds);
             float tSpawn = Clamp01(Elapsed / SpawnRampSeconds);
+            float tDifficulty = Clamp01(Elapsed / OtherDifficultyRampSeconds);
 
             Speed = Lerp(SpeedMin, SpeedMax, tSpeed);
             SpawnInterval = Lerp(SpawnMin, SpawnMax, tSpawn);
-            DoubleObstacleChance = Lerp(DoubleMin, DoubleMax, tSpeed);
-            WindInterval = Lerp(WindMin, WindMax, tSpeed);
+            DoubleObstacleChance = Lerp(DoubleMin, DoubleMax, tDifficulty);
+            WindInterval = Lerp(WindMin, WindMax, tDifficulty);
         }
 
         private static float Clamp01(float v)

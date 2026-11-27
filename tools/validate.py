@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
-"""Validação estática do projeto Unity (substitui o compilador neste ambiente).
 
-Checagens:
-  1. .meta: todo asset sob Assets/ tem .meta; todo .meta tem asset; GUIDs únicos.
-  2. Sintaxe C#: tree-sitter-c-sharp em todos os .cs — zero nós ERROR/MISSING;
-     o nome do arquivo deve declarar class/struct/enum/interface correspondente.
-  3. Cenar e .asset: todo guid citado existe em algum .meta ou é built-in Unity.
-  4. MonoBehaviours em cena: guid -> .cs contém a classe declarada.
-  5. EditorBuildSettings: caminhos de cena existem.
-  6. Chaves/parênteses balanceados por arquivo .cs (redundante, barato).
 
-Uso: python3 tools/validate.py   -> exit code 0 = verde.
-"""
 from __future__ import annotations
 
 import re
@@ -26,34 +15,23 @@ try:
     import tree_sitter_c_sharp
     LANGUAGE = Language(tree_sitter_c_sharp.language())
     PARSER = Parser(LANGUAGE)
-except Exception as exc:  # pragma: no cover
+except Exception as exc:
     print(f"FALHA ao carregar tree-sitter-c-sharp: {exc}", file=sys.stderr)
     sys.exit(2)
 
 GUID_RE = re.compile(r"guid:\s*([0-9a-f]{32})")
 BUILTIN_GUIDS = {
-    "0000000000000000e000000000000000",  # built-in assets (meshes, etc.)
-    "0000000000000000f000000000000000",  # built-in extra
-    "00000000000000000000000000000000",  # none
+    "0000000000000000e000000000000000",
+    "0000000000000000f000000000000000",
+    "00000000000000000000000000000000",
 }
-
-# GUIDs já presentes no commit original do template (referências legítimas a
-# scripts/shaders/texturas de pacotes URP/InputSystem que vivem no
-# Library/PackageCache, fora do repositório).
-_TEMPLATE_REV = "418b2eb1f1f2f335f3ecf745c9289c74b72fc34b"
 
 
 def load_template_guids() -> set[str]:
-    try:
-        import subprocess
-        out = subprocess.run(
-            ["git", "grep", "-h", "-o", "-E", r"\b[0-9a-f]{32}\b", _TEMPLATE_REV],
-            capture_output=True, text=True, cwd=ROOT, timeout=30)
-        if out.returncode == 0:
-            return set(out.stdout.split())
-    except Exception:
-        pass
-    return set()
+    path = ROOT / "tools" / "template-guids.txt"
+    if not path.exists():
+        raise FileNotFoundError("Lista de GUIDs do template ausente: " + str(path))
+    return set(re.findall(r"\b[0-9a-f]{32}\b", path.read_text(encoding="utf-8")))
 
 
 TEMPLATE_GUIDS = load_template_guids()
@@ -73,7 +51,6 @@ def warn(msg: str) -> None:
     warnings.append(msg)
 
 
-# ---------------------------------------------------------------- 1. metas
 def check_metas() -> dict[str, Path]:
     guid_to_path: dict[str, Path] = {}
     if not ASSETS.is_dir():
@@ -104,14 +81,13 @@ def check_metas() -> dict[str, Path]:
     return guid_to_path
 
 
-# ---------------------------------------------------------------- 2. .cs
 def check_csharp() -> None:
     for cs in sorted(ASSETS.rglob("*.cs")):
         rel = cs.relative_to(ROOT)
         src = cs.read_bytes()
         tree = PARSER.parse(src)
 
-        # nós de erro
+
         bad: list[tuple[int, str]] = []
 
         def walk(node) -> None:
@@ -127,21 +103,20 @@ def check_csharp() -> None:
         for line, snippet in bad[:8]:
             err(f"sintaxe {rel}:{line}: {snippet}")
 
-        # nome do arquivo declarado?
+
         text = src.decode("utf-8", "replace")
         stem = cs.stem
         decls = DECL_RE.findall(text)
         if stem not in decls:
             err(f"{rel}: nenhuma declaracao com o nome '{stem}' (Unity exige)")
 
-        # balanceamento barato
+
         if text.count("{") != text.count("}"):
             err(f"{rel}: chaves desbalanceadas {{={text.count('{')} }}={text.count('}')}")
         if text.count("(") != text.count(")"):
             err(f"{rel}: parenteses desbalanceados")
 
 
-# ------------------------------------------------- 3/4. refs em cenas/assets
 def check_references(guid_to_path: dict[str, Path]) -> None:
     ref_files = list(ASSETS.rglob("*.unity")) + list(ASSETS.rglob("*.asset")) + \
         list(ASSETS.rglob("*.prefab")) + list(ASSETS.rglob("*.mat"))
@@ -155,11 +130,11 @@ def check_references(guid_to_path: dict[str, Path]) -> None:
                 continue
             if g not in guid_to_path:
                 if g in TEMPLATE_GUIDS:
-                    continue  # referencia legitima a pacote (URP/InputSystem)
+                    continue
                 err(f"{rel}: guid desconhecido {g}")
                 continue
             target = guid_to_path[g]
-            # se aponta para .cs, conferir classe declarada
+
             if target.suffix == ".cs":
                 body = target.read_text(encoding="utf-8", errors="replace")
                 cls = target.stem
@@ -167,7 +142,6 @@ def check_references(guid_to_path: dict[str, Path]) -> None:
                     err(f"{rel}: {g} -> {target.relative_to(ROOT)} sem class {cls}")
 
 
-# ------------------------------------------------------------ 5. build settings
 def check_build_settings() -> None:
     ebs = ROOT / "ProjectSettings" / "EditorBuildSettings.asset"
     if not ebs.exists():
@@ -182,14 +156,16 @@ def check_build_settings() -> None:
             err(f"EditorBuildSettings: cena inexistente {p}")
 
 
-# ---------------------------------------------------------------- 6. settings
 def check_project_settings() -> None:
     ps = (ROOT / "ProjectSettings" / "ProjectSettings.asset").read_text(
         encoding="utf-8", errors="replace")
-    if "activeInputHandler: 1" in ps:
-        warn("activeInputHandler ainda = 1 (so Input System); plano exige 2 (Both)")
+    if "activeInputHandler: 1" not in ps:
+        err("activeInputHandler deve ser 1 (apenas New Input System) para Android")
     if "allowedAutorotateToPortrait: 1" in ps:
         warn("autorotacao para retrato ainda habilitada (plano exige paisagem)")
+    for cs in ASSETS.rglob("*.cs"):
+        if re.search(r"\b(?:UnityEngine\.)?Input\s*\.", cs.read_text(encoding="utf-8")):
+            err(f"{cs.relative_to(ROOT)}: uso da API legada UnityEngine.Input")
 
 
 def main() -> int:

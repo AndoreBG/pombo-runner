@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
-"""Gera arquivos .meta faltantes para tudo que está sob Assets/.
 
-Uso:  python3 tools/gen_meta.py
-- Pastas recebem folderAsset: yes; .cs -> MonoImporter; .shader -> ShaderImporter;
-  .unity/.asset/.mat/.inputactions/.png... -> DefaultImporter/NativeFormatImporter
-  conforme o tipo. GUIDs são uuid4 hex (32 chars), verificados contra os já usados.
-Idempotente: só cria o que falta.
-"""
+
 from __future__ import annotations
 
 import re
@@ -100,13 +94,11 @@ def meta_for(path: Path, guid: str) -> str:
         return META_SHADER.format(guid=guid)
     if ext in (".unity", ".asset", ".mat", ".prefab", ".inputactions",
                ".volumeprofile", ".playable", ".controller"):
-        # assets que podem ter objeto principal: mantemos DefaultImporter p/ .unity
+
         if ext == ".unity":
             return META_DEFAULT.format(guid=guid)
-        # .asset/.mat referenciam objeto principal via guid do próprio arquivo;
-        # o Unity aceita NativeFormatImporter com mainObjectFileID 0? Nao —
-        # para .asset usamos DefaultImporter? Na pratica, .asset de ScriptableObject
-        # usa NativeFormatImporter com mainObjectFileID: 11400000.
+
+
         main = 11400000 if ext == ".asset" else 0
         if ext in (".asset", ".mat"):
             return META_NATIVE.format(guid=guid, main_object=main)

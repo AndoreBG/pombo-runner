@@ -2,10 +2,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // MainMenuBootstrap — composition root da cena MainMenu.
-    // Monta o menu em runtime; a cena YAML contém câmera, luz e volume.
-    // ---------------------------------------------------------------------
+
+
     public sealed class MainMenuBootstrap : MonoBehaviour
     {
         private void Awake()

@@ -2,10 +2,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // ScoreManager — score = distância (m) + 25 por obstáculo ultrapassado.
-    // Recorde persistido em PlayerPrefs (PRR_BestScore).
-    // ---------------------------------------------------------------------
+
+
     public sealed class ScoreManager
     {
         private const string BestKey = "PRR_BestScore";
@@ -52,7 +50,7 @@ namespace PigeonRooftopRush
             Raise();
         }
 
-        /// <summary>Grava o recorde se for maior. Retorna true se novo recorde.</summary>
+
         public bool SubmitBest()
         {
             if (Score <= Best) return false;

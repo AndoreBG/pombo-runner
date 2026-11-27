@@ -3,11 +3,8 @@ using System.Collections.Generic;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // EventBus — Observer/Event Bus tipado (padrão do PDF).
-    // Disciplina: todo Subscribe em MonoBehaviour usa method group e é
-    // pareado em OnDisable/OnDestroy, garantindo limpeza ao trocar de cena.
-    // ---------------------------------------------------------------------
+
+
     public static class EventBus
     {
         private static readonly Dictionary<Type, Delegate> Handlers =
@@ -34,7 +31,7 @@ namespace PigeonRooftopRush
         public static void Raise<T>(T evt)
         {
             if (!Handlers.TryGetValue(typeof(T), out var d)) return;
-            // cópia: handlers podem se remover durante a elevação
+
             ((Action<T>)d)?.Invoke(evt);
         }
 
@@ -44,9 +41,7 @@ namespace PigeonRooftopRush
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Tipos de evento do jogo
-    // ---------------------------------------------------------------------
+
     public enum CrashReason
     {
         Obstacle,

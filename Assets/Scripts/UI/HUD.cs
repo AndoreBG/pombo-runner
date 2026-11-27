@@ -4,10 +4,8 @@ using UnityEngine.UI;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // HUD — score, recorde, velocidade, barra de energia e overlay de
-    // game over. Assina eventos pelo EventBus (OnEnable/OnDisable).
-    // ---------------------------------------------------------------------
+
+
     public sealed class HUD : MonoBehaviour
     {
         private GameManager _gm;
@@ -22,7 +20,7 @@ namespace PigeonRooftopRush
         private Text _goReason;
         private Text _goScore;
         private Text _goBest;
-        private GameObject _goNewBest;
+        private Text _goNewBest;
         private int _lastSpeed = int.MinValue;
         private Coroutine _emptyFlash;
 
@@ -51,7 +49,6 @@ namespace PigeonRooftopRush
             EventBus.Unsubscribe<FlapBlockedEvent>(OnFlapBlocked);
         }
 
-        // ------------------------------------------------------------ build
 
         private void BuildUi()
         {
@@ -60,7 +57,7 @@ namespace PigeonRooftopRush
             Vector2 fullMax = Vector2.one;
             Vector2 center = new Vector2(0.5f, 0.5f);
 
-            // ---- canto superior esquerdo: pontos/recorde ----
+
             _scoreText = UiFactory.Label(root, "ScoreText", "PONTOS  0",
                 44, TextAnchor.UpperLeft, UiFactory.ColorText,
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
@@ -71,13 +68,13 @@ namespace PigeonRooftopRush
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
                 new Vector2(40f, -88f), new Vector2(600f, 44f));
 
-            // ---- canto superior direito: velocidade ----
+
             _speedText = UiFactory.Label(root, "SpeedText", "0 m/s",
                 34, TextAnchor.UpperRight, UiFactory.ColorText,
                 new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f),
                 new Vector2(-40f, -24f), new Vector2(400f, 50f));
 
-            // ---- rodapé: barra de energia ----
+
             Image barBg = UiFactory.Panel(root, "EnergyBackground",
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
                 new Vector2(0f, 26f), new Vector2(560f, 36f),
@@ -102,7 +99,7 @@ namespace PigeonRooftopRush
                 new Vector2(0f, 118f), new Vector2(560f, 36f));
             _emptyText.gameObject.SetActive(false);
 
-            // ---- overlay de game over ----
+
             _gameOverRoot = new GameObject("GameOverOverlay", typeof(RectTransform));
             var goRt = _gameOverRoot.GetComponent<RectTransform>();
             goRt.SetParent(root, false);
@@ -151,12 +148,11 @@ namespace PigeonRooftopRush
 
             _gameOverRoot.SetActive(false);
 
-            // estado inicial
+
             if (_gm != null && _gm.Score != null)
                 _bestText.text = $"RECORDE  {_gm.Score.Best}";
         }
 
-        // ------------------------------------------------------------ API
 
         public void ShowPlaying()
         {
@@ -168,11 +164,10 @@ namespace PigeonRooftopRush
             _goReason.text = reason == CrashReason.Obstacle ? "Você bateu!" : "Você caiu!";
             _goScore.text = $"PONTOS  {score}";
             _goBest.text = $"RECORDE  {best}";
-            _goNewBest.SetActive(isNewBest);
+            _goNewBest.gameObject.SetActive(isNewBest);
             _gameOverRoot.SetActive(true);
         }
 
-        // --------------------------------------------------------- eventos
 
         private void OnScoreChanged(ScoreChangedEvent e)
         {
@@ -184,7 +179,7 @@ namespace PigeonRooftopRush
         {
             if (_energyFill != null) _energyFill.fillAmount = e.Percent / 100f;
             if (_energyText != null) _energyText.text = $"ENERGIA  {e.Percent}%";
-            if (_emptyText != null && e.Percent > 0) _emptyText.SetActive(false);
+            if (_emptyText != null && e.Percent > 0) _emptyText.gameObject.SetActive(false);
         }
 
         private void OnFlapBlocked(FlapBlockedEvent e)
@@ -196,9 +191,9 @@ namespace PigeonRooftopRush
 
         private IEnumerator FlashEmpty()
         {
-            _emptyText.SetActive(true);
+            _emptyText.gameObject.SetActive(true);
             yield return new WaitForSeconds(0.5f);
-            _emptyText.SetActive(false);
+            _emptyText.gameObject.SetActive(false);
             _emptyFlash = null;
         }
 

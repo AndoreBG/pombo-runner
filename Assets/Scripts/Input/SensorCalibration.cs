@@ -2,25 +2,19 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // SensorCalibration — neutro do acelerômetro, dead-zone e mapeamento
-    // de eixos. Os flags públicos permitem correção em dispositivo pelo
-    // CalibrationUI (Inverter X / Inverter Y / Trocar eixos) e como
-    // padrão no código.
-    // ---------------------------------------------------------------------
+
+
     [System.Serializable]
     public sealed class SensorCalibration
     {
-        // Padrões derivados da derivação do frame da tela (landscape):
-        // inclinar p/ direita -> accel.x negativo; inclinar topo p/ cima ->
-        // accel.y negativo. Se o aparelho do usuário divergir, o CalibrationUI
-        // permite inverter/trocar ao vivo.
-        public bool invertX = true;
+
+
+        public bool invertX = false;
         public bool invertY = true;
         public bool swapXY = false;
 
-        [Range(0.5f, 4f)] public float sensitivity = 1.7f;
-        [Range(0f, 0.3f)] public float deadZone = 0.09f;
+        [Range(0.5f, 4f)] public float sensitivity = 1.2f;
+        [Range(0f, 0.3f)] public float deadZone = 0.14f;
 
         public Vector3 Neutral = Vector3.zero;
         public bool IsSet { get; private set; }
@@ -58,9 +52,11 @@ namespace PigeonRooftopRush
             if (invertX) x = -x;
             if (invertY) y = -y;
 
-            var steer = new Vector2(x, y) * sensitivity;
-            if (steer.magnitude < deadZone) return Vector2.zero;
-            return Vector2.ClampMagnitude(steer, 1f);
+            x = Mathf.Clamp(x * sensitivity, -1f, 1f);
+            y = Mathf.Clamp(y * sensitivity, -1f, 1f);
+            if (Mathf.Abs(x) < deadZone) x = 0f;
+            if (Mathf.Abs(y) < deadZone) y = 0f;
+            return new Vector2(x, y);
         }
     }
 }

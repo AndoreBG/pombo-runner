@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
-"""Gera Assets/Scenes/MainMenu.unity e Assets/Scenes/Game.unity.
 
-Estrategia (ver plano, E1): os blocos de Main Camera / Directional Light /
-Global Volume sao copiados do template validado (tools/scene_template.unity,
-extraido de Assets/Scenes/gameplay.unity) com remapeamento de fileIDs; o
-resto da cena (jogador, pools, HUD...) e montado em runtime pelo Bootstrap.
 
-Uso: python3 tools/gen_scenes.py
-Requer os .meta dos bootstraps já gerados (tools/gen_meta.py).
-"""
 from __future__ import annotations
 
 import re
@@ -40,7 +32,7 @@ SCENE_CONFIGS = {
     },
 }
 
-# ids do template por grupo
+
 GROUPS = {
     "camera": ["330585543", "330585544", "330585545", "330585546", "330585547"],
     "light": ["410087039", "410087040", "410087041", "410087042"],
@@ -51,7 +43,7 @@ SCENEROOTS_ID = "9223372036854775807"
 
 
 def parse_template(text: str) -> dict[str, tuple[str, str]]:
-    """id -> (class_id, corpo_do_bloco_sem_o_cabecalho)"""
+
     matches = list(BLOCK_RE.finditer(text))
     blocks: dict[str, tuple[str, str]] = {}
     for i, m in enumerate(matches):
@@ -107,7 +99,7 @@ def apply_camera(body: str, cfg: dict) -> str:
 
 def apply_camera_component(body: str, cfg: dict) -> str:
     bg = cfg["cam_bg"]
-    # clear color solido = cor da nevoa (WorldBuilder.SkyColor)
+
     body = re.sub(r"m_ClearFlags: \d+", "m_ClearFlags: 2", body, count=1)
     body = re.sub(r"far clip plane: \d+", f"far clip plane: {cfg['cam_far']}", body, count=1)
     body = re.sub(r"field of view: \d+", f"field of view: {cfg['cam_fov']}", body, count=1)
@@ -119,7 +111,7 @@ def apply_camera_component(body: str, cfg: dict) -> str:
 
 
 def bootstrap_blocks(cfg: dict, next_id: int) -> tuple[dict[str, tuple[str, str]], dict[str, str], int]:
-    """Cria GO + Transform + MonoBehaviour do bootstrap. Retorna (novos blocos, mapping, next_id)."""
+
     script_meta = ROOT / "Assets" / "Scripts" / "Boot" / f"{cfg['bootstrap']}.cs.meta"
     if not script_meta.exists():
         raise SystemExit(
@@ -169,14 +161,14 @@ def bootstrap_blocks(cfg: dict, next_id: int) -> tuple[dict[str, tuple[str, str]
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {{fileID: 11500000, guid: {guid}, type: 3}}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
 """
     return {go_id: ("1", go), tr_id: ("4", tr), mb_id: ("114", mb)}, {"bootstrap_tr": tr_id}, next_id
 
 
 def build_scene(name: str, cfg: dict, blocks: dict[str, tuple[str, str]]) -> str:
-    # aloca novos ids para grupos de objetos
+
     mapping: dict[str, str] = {}
     next_id = 100001
     for group in ("camera", "light", "volume"):
@@ -189,29 +181,29 @@ def build_scene(name: str, cfg: dict, blocks: dict[str, tuple[str, str]]) -> str
 
     parts: list[str] = ["%YAML 1.1\n%TAG !u! tag:unity3d.com,2011\n"]
 
-    # settings (copiados verbatim)
+
     for sid in ("1", "2", "3", "4"):
         cid, body = blocks[sid]
         parts.append(f"--- !u!{cid} &{sid}\n{body}")
 
-    # objetos do template remapeados
+
     cam_tr = mapping["330585546"]
     light_tr = mapping["410087041"]
     vol_tr = mapping["832575519"]
     for old_id in GROUPS["camera"] + GROUPS["light"] + GROUPS["volume"]:
         cid, body = blocks[old_id]
         body = remap(body, mapping)
-        if old_id == "330585546":      # camera transform
+        if old_id == "330585546":
             body = apply_camera(body, cfg)
-        if old_id == "330585545":      # camera component
+        if old_id == "330585545":
             body = apply_camera_component(body, cfg)
         parts.append(f"--- !u!{cid} &{mapping[old_id]}\n{body}")
 
-    # bootstrap
+
     for bid, (cid, body) in new_blocks.items():
         parts.append(f"--- !u!{cid} &{bid}\n{body}")
 
-    # SceneRoots
+
     roots = [cam_tr, light_tr, vol_tr, bs_map["bootstrap_tr"]]
     roots_yaml = "\n".join(f"  - {{fileID: {r}}}" for r in roots)
     parts.append(

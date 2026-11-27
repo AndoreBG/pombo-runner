@@ -3,11 +3,8 @@ using UnityEngine.UI;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // CalibrationUI — overlay de calibragem exibido antes de cada run.
-    // Mostra os eixos ao vivo e permite corrigir a orientação do sensor
-    // diretamente no dispositivo (Inverter X / Inverter Y / Trocar eixos).
-    // ---------------------------------------------------------------------
+
+
     public sealed class CalibrationUI : MonoBehaviour
     {
         private GameManager _gm;
@@ -56,8 +53,8 @@ namespace PigeonRooftopRush
             UiFactory.Label(panel.transform, "Body",
                 "Segure o aparelho na posição natural de jogo e\n" +
                 "toque em COMEÇAR para capturar a posição neutra.\n\n" +
-                "Os eixos ao vivo aparecem abaixo. Se estiverem\n" +
-                "trocados, use os botões de correção.",
+                "ZERAR X/Y usa a posição atual como neutro.\n" +
+                "Se necessário, use os botões de correção.",
                 28, TextAnchor.MiddleCenter, UiFactory.ColorTextDim,
                 center, center, center, new Vector2(0f, 95f), new Vector2(880f, 190f), true);
 
@@ -70,21 +67,25 @@ namespace PigeonRooftopRush
                 32, TextAnchor.MiddleCenter, UiFactory.ColorAmber,
                 center, center, center, new Vector2(0f, -80f), new Vector2(860f, 44f));
 
-            // correção de eixos ao vivo no dispositivo:
-            // se o tilt sair invertido/trocado, o jogador conserta aqui mesmo
+
             float fixY = -145f;
             UiFactory.Btn(panel.transform, "InvertXButton", "INVERTER X",
                 22, UiFactory.ColorGrey, UiFactory.ColorText,
-                center, center, center, new Vector2(-200f, fixY), new Vector2(190f, 50f),
+                center, center, center, new Vector2(-300f, fixY), new Vector2(190f, 50f),
                 () => _gm?.FlightInput?.InvertAxis(true));
             UiFactory.Btn(panel.transform, "InvertYButton", "INVERTER Y",
                 22, UiFactory.ColorGrey, UiFactory.ColorText,
-                center, center, center, new Vector2(0f, fixY), new Vector2(190f, 50f),
+                center, center, center, new Vector2(-100f, fixY), new Vector2(190f, 50f),
                 () => _gm?.FlightInput?.InvertAxis(false));
             UiFactory.Btn(panel.transform, "SwapAxesButton", "TROCAR EIXOS",
                 22, UiFactory.ColorGrey, UiFactory.ColorText,
-                center, center, center, new Vector2(200f, fixY), new Vector2(190f, 50f),
+                center, center, center, new Vector2(100f, fixY), new Vector2(190f, 50f),
                 () => _gm?.FlightInput?.SwapAxes());
+
+            UiFactory.Btn(panel.transform, "RecenterButton", "ZERAR X/Y",
+                22, UiFactory.ColorBlue, UiFactory.ColorText,
+                center, center, center, new Vector2(300f, fixY), new Vector2(190f, 50f),
+                () => _gm?.FlightInput?.Calibrate());
 
             UiFactory.Btn(panel.transform, "StartButton", "COMEÇAR",
                 36, UiFactory.ColorGreen, UiFactory.ColorText,

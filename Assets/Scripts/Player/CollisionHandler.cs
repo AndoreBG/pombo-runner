@@ -2,12 +2,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // CollisionHandler — triggers do pombo.
-    //   obstáculo (ObstacleMarker) -> CrashEvent
-    //   corrente de ar (WindZone)  -> liga/desliga o efeito na EnergySystem
-    // Só responde quando Running (estado Playing).
-    // ---------------------------------------------------------------------
+
+
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
     public sealed class CollisionHandler : MonoBehaviour
@@ -42,7 +38,7 @@ namespace PigeonRooftopRush
             var wind = other.GetComponent<WindZone>();
             if (wind != null && wind.Type != WindType.None)
             {
-                // ignora a saída se já entramos em outra corrente (sobreposição)
+
                 if (Energy != null && Energy.InWind && Energy.Wind == wind.Type)
                 {
                     Energy.SetWind(WindType.None, false);

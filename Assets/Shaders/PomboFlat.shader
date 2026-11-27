@@ -1,6 +1,6 @@
-// Pombo/Flat — lambert simples autocontido (so API estavel de Core.hlsl).
-// Luz e nevoa chegam via uniforms globais definidos pelo jogo (MaterialFactory /
-// WorldBuilder), o que elimina dependencia de APIs de iluminacao do URP.
+
+
+
 Shader "Pombo/Flat"
 {
     Properties
@@ -45,12 +45,12 @@ Shader "Pombo/Flat"
                 half4 _BaseColor;
             CBUFFER_END
 
-            // ---- uniforms globais do jogo ----
-            float4 _PomboLightDir;    // direcao da luz (superficie -> luz)
+
+            float4 _PomboLightDir;
             half4 _PomboLightColor;
             half4 _PomboAmbient;
             half4 _PomboFogColor;
-            float4 _PomboFogParams;   // x = near, y = far
+            float4 _PomboFogParams;
 
             Varyings vert(Attributes IN)
             {

@@ -2,12 +2,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // PigeonBuilder — monta o visual do pombo com primitivas estilizadas
-    // (cubo/cápsula/esfera) e o setup de física (RB dinâmico + trigger).
-    // ADIÇÃO fora da lista do PDF: necessária pela estratégia de montagem
-    // em runtime (plano, E1).
-    // ---------------------------------------------------------------------
+
+
     public static class PigeonBuilder
     {
         private static readonly Color BodyColor = new Color(0.62f, 0.67f, 0.74f);
@@ -44,22 +40,22 @@ namespace PigeonRooftopRush
             var model = new GameObject("Model").transform;
             model.SetParent(root, false);
 
-            // corpo: cápsula deitada ao longo de Z
+
             Part(model, PrimitiveType.Capsule, BodyColor,
                 new Vector3(0f, 0f, 0f), new Vector3(0.55f, 0.45f, 0.5f),
                 Quaternion.Euler(90f, 0f, 0f));
 
-            // cabeça
+
             Part(model, PrimitiveType.Sphere, BodyColor,
                 new Vector3(0f, 0.17f, 0.40f), new Vector3(0.34f, 0.34f, 0.34f),
                 Quaternion.identity);
 
-            // bico
+
             Part(model, PrimitiveType.Cube, BeakColor,
                 new Vector3(0f, 0.13f, 0.60f), new Vector3(0.09f, 0.07f, 0.20f),
                 Quaternion.identity);
 
-            // olhos
+
             Part(model, PrimitiveType.Sphere, EyeColor,
                 new Vector3(-0.10f, 0.23f, 0.50f), new Vector3(0.06f, 0.06f, 0.06f),
                 Quaternion.identity);
@@ -67,12 +63,12 @@ namespace PigeonRooftopRush
                 new Vector3(0.10f, 0.23f, 0.50f), new Vector3(0.06f, 0.06f, 0.06f),
                 Quaternion.identity);
 
-            // cauda
+
             Part(model, PrimitiveType.Cube, WingColor,
                 new Vector3(0f, 0.05f, -0.54f), new Vector3(0.30f, 0.05f, 0.36f),
                 Quaternion.Euler(-12f, 0f, 0f));
 
-            // asas: pivô no ombro, "mesh" deslocada para fora
+
             var wingL = new GameObject("WingLeft").transform;
             wingL.SetParent(model, false);
             wingL.localPosition = new Vector3(-0.18f, 0.10f, 0.02f);

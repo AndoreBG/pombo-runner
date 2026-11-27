@@ -1,24 +1,6 @@
 #!/usr/bin/env python3
-"""Verificação estática PROFUNDA do projeto (complementa tools/validate.py).
 
-Checagens:
-  C1. Integridade de fileID local nos .unity (todo {fileID: N} sem guid resolve
-      para uma âncora &N definida no mesmo arquivo; 0 = null ok).
-  C2. Implementação completa da interface IFlightInput nas duas classes.
-  C3. Pareamento EventBus: cada Subscribe<T> tem Unsubscribe<T> do mesmo handler
-      na mesma classe; nenhum handler duplicado.
-  C4. Chamadas × definições: inferência simples de tipo de variável (x = new T()
-      / T x) e checagem de que membros chamados existem no tipo.
-  C5. Shaders: SubShader/Pass/HLSLPROGRAM/ENDHLSL balanceados, chaves equilibradas,
-      propriedades usadas no código declaradas no Properties.
-  C6. Consistência de constantes código × docs/gdd.md (energia, dificuldade, voo).
-  C7. Higiene: sem `using UnityEditor` fora de #if UNITY_EDITOR; nomes de classe
-      duplicados; arquivos .cs sem declaração correspondente ao filename.
-  C8. MonoBehaviour: TODO método mágico (Awake/Update/...) declarado é privado/
-      público consistente e a classe tem filename igual (reforço do C7).
 
-Uso: python3 tools/deep_check.py  -> exit 0 = verde.
-"""
 from __future__ import annotations
 
 import re
@@ -44,29 +26,27 @@ def read(p: Path) -> str:
     return p.read_text(encoding="utf-8", errors="replace")
 
 
-# ----------------------------------------------------------------- C1 cenas
 def check_scene_fileids() -> None:
     for scene in sorted(ASSETS.rglob("*.unity")):
         text = read(scene)
         anchors = set(re.findall(r"^--- !u!\d+ &(\d+)", text, re.M))
         rel = scene.relative_to(ROOT)
-        # referências locais: {fileID: N} sem guid na MESMA linha
+
         for i, line in enumerate(text.splitlines(), 1):
             for m in re.finditer(r"\{fileID: (\d+)\}", line):
                 fid = m.group(1)
                 if fid == "0":
                     continue
                 if "guid:" in line:
-                    continue  # referência a asset externo (checada no validate)
+                    continue
                 if fid not in anchors:
                     err(f"{rel}:{i}: fileID local {fid} sem âncora no arquivo")
-        # linhas m_Component devem apontar para âncoras
+
         for m in re.finditer(r"component: \{fileID: (\d+)\}", text):
             if m.group(1) not in anchors:
                 err(f"{rel}: component fileID {m.group(1)} sem âncora")
 
 
-# ------------------------------------------------------------- C2 interfaces
 def strip_comments(src: str) -> str:
     src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
     src = re.sub(r"//[^\n]*", "", src)
@@ -76,7 +56,7 @@ def strip_comments(src: str) -> str:
 def check_interfaces() -> None:
     iface = read(ASSETS / "Scripts/Input/IFlightInput.cs")
     iface = strip_comments(iface)
-    # membros: tipo Nome( ... ) | tipo Nome { get; }
+
     members = set(
         re.findall(
             r"^\s{8}(?:[\w<>\[\],\s]+?)\s+(\w+)\s*(?:\(|\{)", iface, re.M)
@@ -90,14 +70,14 @@ def check_interfaces() -> None:
         src = strip_comments(read(ASSETS / "Scripts/Input" / cls_file))
         missing = []
         for mem in sorted(members):
-            # propriedade ou método?
+
             if not re.search(rf"\b{mem}\s*\(", src) and \
                not re.search(rf"\b{mem}\s*(\{{|\=)", src):
                 missing.append(mem)
         if missing:
             err(f"{cls_file}: nao implementa {missing} de IFlightInput")
 
-    # SensorCalibration: métodos usados por MobileTiltInput precisam existir
+
     cal = strip_comments(read(ASSETS / "Scripts/Input/SensorCalibration.cs"))
     used = set(re.findall(r"Calibration\.(\w+)\s*\(", strip_comments(
         read(ASSETS / "Scripts/Input/MobileTiltInput.cs"))))
@@ -108,7 +88,6 @@ def check_interfaces() -> None:
             err(f"MobileTiltInput usa Calibration.{u} inexistente")
 
 
-# ------------------------------------------------------------ C3 event bus
 def check_eventbus_pairing() -> None:
     for cs in sorted(ASSETS.rglob("*.cs")):
         src = strip_comments(read(cs))
@@ -127,24 +106,22 @@ def check_eventbus_pairing() -> None:
             if cs_sub.get(key, 0) < n:
                 err(f"{rel}: Unsubscribe<{key[0]}> x{n} sem Subscribe "
                     f"({key[1]})")
-        # Raise pode ser de qualquer classe — não checa aqui
 
 
-# ------------------------------------------------- C4 chamadas × definições
 def extract_class_members() -> dict[str, set[str]]:
-    """nome da classe -> membros (métodos + propriedades + campos públicos)."""
+
     out: dict[str, set[str]] = {}
     for cs in sorted(ASSETS.rglob("*.cs")):
         src = strip_comments(read(cs))
         for m in re.finditer(
                 r"\b(?:class|interface|struct|enum)\s+(\w+)[^{]*\{", src):
             name = m.group(1)
-            # bloco aproximado: da declaração ao fim do arquivo (simples)
+
             body = src[m.end():]
             members = set(re.findall(
                 r"\b(?:public|private|protected|internal)?\s*[\w<>\[\],\s\.]+?"
                 r"\s+(\w+)\s*(?:\(|\{|\=)", body))
-            # remove ruídos
+
             members -= {"get", "set", "if", "for", "while", "switch", "return",
                         "new", "using", "else", "foreach", "catch", "this"}
             out.setdefault(name, set()).update(members)
@@ -154,7 +131,7 @@ def extract_class_members() -> dict[str, set[str]]:
 def check_calls() -> None:
     members_by_type = extract_class_members()
 
-    # variável -> tipo: coleta global (melhor esforço)
+
     type_map: dict[str, str] = {}
     all_src = "\n".join(strip_comments(read(c)) for c in sorted(ASSETS.rglob("*.cs")))
     for t, v in re.findall(r"\b([A-Z]\w+)\s+(\w+)\s*=\s*new\s+\w+", all_src):
@@ -162,7 +139,7 @@ def check_calls() -> None:
     for t, v in re.findall(r"\b([A-Z]\w+)\s+(\w+)\s*[;,)]", all_src):
         type_map.setdefault(v, t)
 
-    # membros universais de qualquer tipo
+
     universal = {"ToString", "Equals", "GetHashCode", "GetType", "Clone"}
 
     known_calls = {
@@ -171,7 +148,7 @@ def check_calls() -> None:
         "_flight": "PigeonFlightController",
     }
 
-    # chamadas _gm.X / spawner.X / score.X ... com tipo inferido no próprio repo
+
     receiver_types = {
         "gm": "GameManager",
         "_gm": "GameManager",
@@ -185,13 +162,13 @@ def check_calls() -> None:
         "calibration": "CalibrationUI",
         "input": "IFlightInput",
         "Calibration": "CalibrationUI",
-        "Hud": "GameManager",  # propriedade Hud do gm — tratada à parte
+        "Hud": "GameManager",
     }
 
-    # membros do GameManager (propriedades) para _gm.X
+
     gm_members = members_by_type.get("GameManager", set())
 
-    # nomes globais ambíguos removidos (resolvidos por arquivo abaixo)
+
     receiver_types.pop("Calibration", None)
     receiver_types.pop("Hud", None)
 
@@ -199,7 +176,7 @@ def check_calls() -> None:
         src = strip_comments(read(cs))
         rel = cs.relative_to(ROOT)
 
-        # tipos locais: declarações de campo/propriedade neste arquivo vencem
+
         local_types: dict[str, str] = {}
         for typ, name in re.findall(
                 r"\b([A-Z]\w*)\s+(\w+)\s*(?:=|\{|;)", src):
@@ -233,7 +210,7 @@ def check_calls() -> None:
                     continue
                 err(f"{rel}: {recv}.{member}() — tipo {t} nao declara '{member}'")
 
-    # acesso a campos/membros das classes estáticas (sem "()")
+
     for cs in sorted(ASSETS.rglob("*.cs")):
         src = strip_comments(read(cs))
         rel = cs.relative_to(ROOT)
@@ -244,7 +221,7 @@ def check_calls() -> None:
             if member not in members:
                 err(f"{rel}: {recv}.{member} — {recv} nao declara '{member}'")
 
-    # chamadas via propriedades do GameManager: _gm.Score.Best etc.
+
     for cs in sorted(ASSETS.rglob("*.cs")):
         src = strip_comments(read(cs))
         rel = cs.relative_to(ROOT)
@@ -252,7 +229,7 @@ def check_calls() -> None:
             if prop not in gm_members:
                 err(f"{rel}: _gm.{prop} inexistente em GameManager")
                 continue
-            # tipo da propriedade
+
             prop_type = {
                 "Score": "ScoreManager", "Difficulty": "DifficultyManager",
                 "Flight": "PigeonFlightController", "Energy": "EnergySystem",
@@ -267,7 +244,6 @@ def check_calls() -> None:
                         f"'{member}'")
 
 
-# ---------------------------------------------------------------- C5 shaders
 def check_shaders() -> None:
     for shader in sorted(ASSETS.rglob("*.shader")):
         src = read(shader)
@@ -282,14 +258,14 @@ def check_shaders() -> None:
         if 'RenderPipeline" = "UniversalPipeline"' not in src and \
            'RenderPipeline"="UniversalPipeline"' not in src:
             err(f"{rel}: tag RenderPipeline ausente")
-        # propriedades usadas via SetColor/declaradas
+
         for prop in set(re.findall(r'SetColor\("(_\w+)"', "\n".join(
                 read(c) for c in ASSETS.rglob("*.cs")))):
             declared = re.findall(r"^\s+(_\w+)\s*\(", src, re.M)
             if prop in ("_BaseColor",) and prop not in declared and \
                prop not in src:
                 err(f"{rel}: propriedade {prop} nao declarada")
-        # uniforms globais usados nos shaders existem no WorldBuilder/game code?
+
         globals_used = set(re.findall(r"\b(_Pombo\w+)", src))
         code = "\n".join(read(c) for c in ASSETS.rglob("*.cs"))
         for g in globals_used:
@@ -297,7 +273,6 @@ def check_shaders() -> None:
                 warn(f"{rel}: global {g} nunca setada no codigo C#")
 
 
-# ------------------------------------------------------------- C6 constantes
 def check_constants_vs_docs() -> None:
     gdd = read(ROOT / "docs/gdd.md")
     energy = strip_comments(read(ASSETS / "Scripts/Player/EnergySystem.cs"))
@@ -305,11 +280,10 @@ def check_constants_vs_docs() -> None:
     flight = strip_comments(read(ASSETS / "Scripts/Player/PigeonFlightController.cs"))
 
     checks = [
-        ("CruiseDrain", energy, r"CruiseDrain\s*=\s*([\d.]+)", "−3,0 /s", r"−3,0"),
-        ("GlideDrain", energy, r"GlideDrain\s*=\s*([\d.]+)", "−1,4 /s", r"1,4"),
-        ("FlapCost", energy, r"FlapCost\s*=\s*([\d.]+)", "−6 por toque", r"−6"),
-        ("AscendingRecover", energy, r"AscendingRecover\s*=\s*([\d.]+)", "+9,0 /s", r"\+9,0"),
-        ("TurbulenceDrain", energy, r"TurbulenceDrain\s*=\s*([\d.]+)", "−8,0 /s", r"−8,0"),
+        ("CruiseDrain", energy, r"CruiseDrain\s*=\s*([\d.]+)", "−1,5 /s", r"−1,5"),
+        ("GlideDrain", energy, r"GlideDrain\s*=\s*([\d.]+)", "−0,7 /s", r"0,7"),
+        ("FlapCost", energy, r"FlapCost\s*=\s*([\d.]+)", "−3 por toque", r"−3"),
+        ("TurbulenceCost", energy, r"TurbulenceCost\s*=\s*([\d.]+)", "−25 pontos ao entrar", r"−25 pontos ao entrar"),
         ("SpeedMin", diff, r"SpeedMin\s*=\s*([\d.]+)", "9 m/s", r"\b9 m/s"),
         ("SpeedMax", diff, r"SpeedMax\s*=\s*([\d.]+)", "24 m/s", r"24 m/s"),
         ("SpawnMin", diff, r"SpawnMin\s*=\s*([\d.]+)", "1,55 s", r"1,55"),
@@ -327,12 +301,11 @@ def check_constants_vs_docs() -> None:
         if not re.search(doc_rx, gdd):
             err(f"C6: GDD nao menciona {claim} (constante {name}={m.group(1)})")
 
-    # energia zerada sem morte instantânea: checar ausência de EndRun em Energy
+
     if "EndRun" in energy:
         err("C6: EnergySystem nao deveria chamar EndRun (design: sem morte por 0)")
 
 
-# --------------------------------------------------------------- C7 higiene
 def check_hygiene() -> None:
     seen_classes: dict[str, Path] = {}
     for cs in sorted(ASSETS.rglob("*.cs")):
@@ -340,27 +313,27 @@ def check_hygiene() -> None:
         src = read(cs)
         stripped = strip_comments(src)
 
-        # UnityEditor fora de bloco #if UNITY_EDITOR
+
         for i, line in enumerate(src.splitlines(), 1):
             if "using UnityEditor" in line and "#if UNITY_EDITOR" not in line:
-                # verifica se há #if anterior no mesmo bloco (aprox: arquivo)
+
                 if "#if UNITY_EDITOR" not in src.split(line)[0]:
                     err(f"{rel}:{i}: using UnityEditor sem #if UNITY_EDITOR")
 
-        # classe/interface/struct/enum declarada == filename
+
         if not re.search(
                 rf"\b(?:class|interface|struct|enum)\s+{re.escape(cs.stem)}\b",
                 stripped):
             err(f"{rel}: filename sem declaracao correspondente")
 
-        # nomes duplicados
+
         for m in re.finditer(r"\bclass\s+(\w+)", stripped):
             n = m.group(1)
             if n in seen_classes and seen_classes[n] != cs:
                 err(f"class duplicada {n}: {seen_classes[n]} e {cs}")
             seen_classes[n] = cs
 
-        # métodos mágicos em classes não-MonoBehaviour (sem MonoBehaviour)
+
         is_mb = "MonoBehaviour" in stripped
         if not is_mb:
             for magic in ("Awake", "Start", "Update", "FixedUpdate",
@@ -370,12 +343,11 @@ def check_hygiene() -> None:
                     err(f"{rel}: metodo {magic} em classe que nao herda "
                         f"MonoBehaviour")
 
-        # MonoBehaviour com Update: ok. Colisão: OnTriggerEnter exige Mono.
+
         if re.search(r"void\s+OnTrigger", stripped) and not is_mb:
             err(f"{rel}: OnTriggerEnter fora de MonoBehaviour")
 
 
-# ------------------------------------------------------------ C8 docs/README
 def check_docs() -> None:
     readme = read(ROOT / "README.md")
     for doc in ("docs/gdd.md", "docs/arquitetura.md",
@@ -385,11 +357,11 @@ def check_docs() -> None:
             err(f"doc ausente: {doc}")
         elif not read(ROOT / doc).strip():
             err(f"doc vazio: {doc}")
-    # links relativos do README existem
+
     for link in re.findall(r"\]\((docs/[\w./-]+|tools/[\w./-]+)\)", readme):
         if not (ROOT / link).exists():
             err(f"README link quebrado: {link}")
-    # cenas citadas no README existem
+
     for scene in re.findall(r"Assets/Scenes/(\w+)\.unity", readme):
         if not (ASSETS / "Scenes" / f"{scene}.unity").exists():
             err(f"README cita cena inexistente: {scene}")

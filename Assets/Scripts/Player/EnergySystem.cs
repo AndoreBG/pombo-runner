@@ -2,22 +2,16 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // EnergySystem — sistema de energia do MVP (tabela do GDD):
-    //   voo normal  -3.0/s | tap -6 | planar -1.4/s
-    //   azul        +9.0/s | vermelha -8.0/s
-    //   zerada      sem flap (o jogador precisa alcançar uma corrente azul)
-    // Displain p/ UI via EventBus (EnergyChangedEvent, percentual inteiro).
-    // ---------------------------------------------------------------------
+
+
     public sealed class EnergySystem
     {
         public const float Max = 100f;
 
-        private const float CruiseDrain = 3.0f;
-        private const float GlideDrain = 1.4f;
-        private const float FlapCost = 6f;
-        private const float AscendingRecover = 9.0f;
-        private const float TurbulenceDrain = 8.0f;
+        private const float CruiseDrain = 1.5f;
+        private const float GlideDrain = 0.7f;
+        private const float FlapCost = 3f;
+        private const float TurbulenceCost = 25f;
 
         public float Current { get; private set; } = Max;
         public float Normalized => Current / Max;
@@ -33,7 +27,7 @@ namespace PigeonRooftopRush
             Current = Max;
             Wind = WindType.None;
             InWind = false;
-            _lastPercent = -1; // força o Raise: HUD volta a 100% na nova run
+            _lastPercent = -1;
             RaiseEnergy();
         }
 
@@ -41,9 +35,19 @@ namespace PigeonRooftopRush
         {
             Wind = inside ? type : WindType.None;
             InWind = inside && type != WindType.None;
+            if (InWind && Wind == WindType.Ascending)
+            {
+                Current = Max;
+                RaiseEnergy();
+            }
+            else if (InWind && Wind == WindType.Turbulence)
+            {
+                Current = Mathf.Max(0f, Current - TurbulenceCost);
+                RaiseEnergy();
+            }
         }
 
-        /// <summary>Consome energia de um tap. Retorna false se sem energia.</summary>
+
         public bool TryConsumeFlap()
         {
             if (FlapBlocked) return false;
@@ -56,13 +60,9 @@ namespace PigeonRooftopRush
         {
             if (InWind && Wind == WindType.Ascending)
             {
-                Current += AscendingRecover * dt;
+                Current = Max;
             }
-            else if (InWind && Wind == WindType.Turbulence)
-            {
-                Current -= TurbulenceDrain * dt;
-            }
-            else
+            else if (!InWind || Wind != WindType.Turbulence)
             {
                 Current -= (gliding ? GlideDrain : CruiseDrain) * dt;
             }

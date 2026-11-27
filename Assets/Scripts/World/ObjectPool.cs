@@ -4,11 +4,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // ObjectPool — pool genérico por chave (MVP: pooling obrigatório).
-    // Objetos liberados ficam inativos sob o worldRoot e são reutilizados
-    // com SetParent/localPosition no Get.
-    // ---------------------------------------------------------------------
+
+
     public sealed class ObjectPool
     {
         private readonly Stack<GameObject> _free = new Stack<GameObject>();

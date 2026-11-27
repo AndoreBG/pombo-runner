@@ -3,18 +3,15 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // MaterialFactory — cria e cacheia materiais dos shaders próprios
-    // (Pombo/Flat e Pombo/Transparent). As cores são convertidas para o
-    // espaço linear porque o projeto usa Linear color space.
-    // ---------------------------------------------------------------------
+
+
     public static class MaterialFactory
     {
         private static Shader _flat;
         private static Shader _transparent;
         private static readonly Dictionary<int, Material> Cache = new Dictionary<int, Material>();
 
-        private static Shader Flat
+        private static Shader FlatShader
         {
             get
             {
@@ -28,7 +25,7 @@ namespace PigeonRooftopRush
             }
         }
 
-        private static Shader Transparent
+        private static Shader TransparentShader
         {
             get
             {
@@ -46,7 +43,7 @@ namespace PigeonRooftopRush
         {
             int key = color.GetHashCode() ^ 0x51ED;
             if (Cache.TryGetValue(key, out var cached) && cached != null) return cached;
-            var mat = new Material(Flat);
+            var mat = new Material(FlatShader);
             mat.SetColor("_BaseColor", color.linear);
             Cache[key] = mat;
             return mat;
@@ -56,8 +53,8 @@ namespace PigeonRooftopRush
         {
             int key = color.GetHashCode() ^ 0x7A11;
             if (Cache.TryGetValue(key, out var cached) && cached != null) return cached;
-            var mat = new Material(Transparent);
-            // alpha não passa por correção gamma — apenas rgb
+            var mat = new Material(TransparentShader);
+
             Color c = color.linear;
             c.a = color.a;
             mat.SetColor("_BaseColor", c);

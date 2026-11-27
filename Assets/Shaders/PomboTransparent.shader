@@ -1,5 +1,5 @@
-// Pombo/Transparent — alpha blend autocontido (correntes de ar, sombras blob).
-// Sem escrita de depth; usado no queue Transparent do URP.
+
+
 Shader "Pombo/Transparent"
 {
     Properties
@@ -47,9 +47,9 @@ Shader "Pombo/Transparent"
                 half4 _BaseColor;
             CBUFFER_END
 
-            // ---- uniforms globais do jogo ----
+
             half4 _PomboFogColor;
-            float4 _PomboFogParams;   // x = near, y = far
+            float4 _PomboFogParams;
 
             Varyings vert(Attributes IN)
             {

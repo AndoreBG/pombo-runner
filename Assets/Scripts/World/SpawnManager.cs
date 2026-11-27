@@ -3,11 +3,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // SpawnManager — spawna fileiras de obstáculos, correntes de ar e
-    // cenário decorativo além da névoa (z = 70), gerencia o despawn e o
-    // bônus de score por obstáculo ultrapassado. Usa ObjectPool por chave.
-    // ---------------------------------------------------------------------
+
+
     public sealed class SpawnManager
     {
         private sealed class ActiveSpawn
@@ -33,6 +30,7 @@ namespace PigeonRooftopRush
         private float _windTimer;
         private float _decorTimer;
         private bool _running;
+        private bool _forceBlueWind;
 
         public void Init(Transform worldRoot, DifficultyManager difficulty, ScoreManager score)
         {
@@ -62,6 +60,7 @@ namespace PigeonRooftopRush
             _running = true;
             _obstacleTimer = 1.3f;
             _windTimer = 4.5f;
+            _forceBlueWind = true;
             _decorTimer = 0.05f;
         }
 
@@ -98,27 +97,49 @@ namespace PigeonRooftopRush
             DespawnAndScore();
         }
 
-        // ------------------------------------------------------------ spawn
 
         private void SpawnObstacleRow()
         {
             float z = SpawnZ + Random.Range(0f, 6f);
 
-            if (Random.value < _difficulty.DoubleObstacleChance)
+            string key1 = RandomObstacleKey(false);
+
+            if (key1 == "wire" || Random.value >= _difficulty.DoubleObstacleChance)
             {
-                // dois obstáculos com corredor garantido (distância >= 2 lanes)
-                string key1 = RandomObstacleKey(false);
-                string key2 = RandomObstacleKey(true);
-                int i = Random.Range(0, 3);
-                int j = i + Random.Range(2, 5 - i);
-                // o fio ocupa o centro (x=0): não colocar o 2º obstáculo em cima
-                if (key1 == "wire" && Lanes[j] == 0) j = 4;
-                SpawnObstacle(key1, Lanes[i], z);
-                SpawnObstacle(key2, Lanes[j], z);
+                SpawnObstacle(key1, Lanes[Random.Range(0, Lanes.Length)], z);
+                return;
             }
-            else
+
+            string key2 = RandomObstacleKey(true);
+            float requiredSeparation = ObstacleHalfWidth(key1) + ObstacleHalfWidth(key2) + 2f;
+
+
+            var pairs = new List<Vector2Int>();
+            for (int i = 0; i < Lanes.Length; i++)
+                for (int j = 0; j < Lanes.Length; j++)
+                    if (Mathf.Abs(Lanes[i] - Lanes[j]) >= requiredSeparation)
+                        pairs.Add(new Vector2Int(i, j));
+
+            if (pairs.Count == 0)
             {
-                SpawnObstacle(RandomObstacleKey(false), Lanes[Random.Range(0, Lanes.Length)], z);
+                SpawnObstacle(key1, Lanes[Random.Range(0, Lanes.Length)], z);
+                return;
+            }
+            Vector2Int pair = pairs[Random.Range(0, pairs.Count)];
+            SpawnObstacle(key1, Lanes[pair.x], z);
+            SpawnObstacle(key2, Lanes[pair.y], z);
+        }
+
+
+        private static float ObstacleHalfWidth(string key)
+        {
+            switch (key)
+            {
+                case "building": return 2.1f;
+                case "antenna": return 0.8f;
+                case "billboard": return 3.45f;
+                case "tree": return 1.7f;
+                default: return 8.5f;
             }
         }
 
@@ -128,7 +149,7 @@ namespace PigeonRooftopRush
             string key = keys[Random.Range(0, keys.Length)];
             if (avoidWire && key == "wire")
             {
-                // re-sorteia entre os 4 tipos restantes (sem fio duplicado)
+
                 int r = Random.Range(0, 4);
                 key = r == 0 ? "building"
                     : r == 1 ? "antenna"
@@ -140,15 +161,18 @@ namespace PigeonRooftopRush
 
         private void SpawnObstacle(string key, int laneX, float z)
         {
-            // o fio atravessa a pista inteira: sempre no centro
+
             float x = key == "wire" ? 0f : laneX;
             SpawnFrom(key, x, z);
         }
 
         private void SpawnWind()
         {
-            string key = Random.value < 0.55f ? "wind_blue" : "wind_red";
-            SpawnFrom(key, Random.Range(-5f, 5f), SpawnZ + 5f);
+
+
+            bool blue = _forceBlueWind || Random.value < 0.55f;
+            _forceBlueWind = !blue;
+            SpawnFrom(blue ? "wind_blue" : "wind_red", Random.Range(-5f, 5f), SpawnZ + 5f);
         }
 
         private void SpawnDecorRow()
@@ -170,7 +194,10 @@ namespace PigeonRooftopRush
         private void SpawnFrom(string key, float x, float z)
         {
             ObjectPool pool = _pools[key];
-            GameObject go = pool.Get(new Vector3(x, 0f, z), _root);
+
+
+            Vector3 localPosition = _root.InverseTransformPoint(new Vector3(x, 0f, z));
+            GameObject go = pool.Get(localPosition, _root);
             _active.Add(new ActiveSpawn
             {
                 Go = go,
@@ -180,7 +207,6 @@ namespace PigeonRooftopRush
             });
         }
 
-        // ----------------------------------------------------------- ciclo
 
         private void DespawnAndScore()
         {

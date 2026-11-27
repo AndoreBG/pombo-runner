@@ -5,14 +5,11 @@ namespace PigeonRooftopRush
     public enum WindType
     {
         None,
-        Ascending,   // azul: sobe + recupera energia
-        Turbulence   // vermelha: drena energia + tremor
+        Ascending,
+        Turbulence
     }
 
-    // ---------------------------------------------------------------------
-    // WindZone — volume trigger de corrente de ar (2 tipos no MVP) com
-    // animação de listras internas (subindo na azul, tremendo na vermelha).
-    // ---------------------------------------------------------------------
+
     public sealed class WindZone : MonoBehaviour
     {
         public WindType Type { get; private set; }

@@ -4,10 +4,8 @@ using UnityEngine.UI;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // MainMenuUI — menu principal (Jogar / Como jogar / Sair) + recorde.
-    // ADIÇÃO fora da lista do PDF: a estrutura de 2 cenas exige um menu.
-    // ---------------------------------------------------------------------
+
+
     public sealed class MainMenuUI : MonoBehaviour
     {
         private GameObject _helpPanel;
@@ -26,23 +24,18 @@ namespace PigeonRooftopRush
             Vector2 fullMax = Vector2.one;
             Vector2 center = new Vector2(0.5f, 0.5f);
 
-            // faixa inferior "chão" para dar contexto visual
+
             UiFactory.Panel(root, "Ground", fullMin,
                 new Vector2(1f, 0.18f), new Vector2(0.5f, 0f),
                 Vector2.zero, Vector2.zero, new Color(0.16f, 0.17f, 0.20f));
 
-            // título (sombra + título)
-            UiFactory.Label(root, "TitleShadow", "PIGEON ROOFTOP RUSH",
+
+            UiFactory.Label(root, "TitleShadow", "Pombo Runner",
                 84, TextAnchor.MiddleCenter, new Color(0f, 0f, 0f, 0.35f),
                 center, center, center, new Vector2(4f, 266f), new Vector2(1500f, 110f));
-            UiFactory.Label(root, "Title", "PIGEON ROOFTOP RUSH",
+            UiFactory.Label(root, "Title", "Pombo Runner",
                 84, TextAnchor.MiddleCenter, UiFactory.ColorText,
                 center, center, center, new Vector2(0f, 270f), new Vector2(1500f, 110f));
-
-            UiFactory.Label(root, "Subtitle",
-                "Um pombo, uma cidade e a vontade de chegar longe.",
-                32, TextAnchor.MiddleCenter, UiFactory.ColorTextDim,
-                center, center, center, new Vector2(0f, 188f), new Vector2(1200f, 46f));
 
             UiFactory.Label(root, "BestLabel",
                 $"RECORDE  {PlayerPrefs.GetInt("PRR_BestScore", 0)}",
@@ -63,12 +56,6 @@ namespace PigeonRooftopRush
                 36, UiFactory.ColorGrey, UiFactory.ColorText,
                 center, center, center, new Vector2(0f, -230f), new Vector2(620f, 96f),
                 Quit);
-
-            UiFactory.Label(root, "Version",
-                "MVP · Unity 6 · Android",
-                22, TextAnchor.LowerRight, UiFactory.ColorTextDim,
-                fullMin, fullMax, new Vector2(1f, 0f),
-                new Vector2(-30f, 24f), new Vector2(400f, 34f));
 
             BuildHelpPanel(root, center, fullMin, fullMax);
         }
@@ -98,8 +85,8 @@ namespace PigeonRooftopRush
                 "INCLINE O APARELHO  para virar, subir e mergulhar.\n" +
                 "TOQUE NA TELA  para bater asas.  SEGURE  para planar.\n\n" +
                 "ENERGIA:  voar custa energia e bater asas custa mais.\n" +
-                "Planar economiza. A corrente AZUL recupera energia;\n" +
-                "a VERMELHA drena e sacode o voo.\n\n" +
+                "Planar economiza. A corrente AZUL recupera toda a energia;\n" +
+                "a VERMELHA tira 25% e sacode o voo.\n\n" +
                 "OBSTÁCULOS:  prédios, antenas, fios elétricos,\n" +
                 "outdoors e árvores. Desvie e vá o mais longe possível!\n\n" +
                 "No editor: WASD/setas inclinam, Espaço bate asas,\n" +

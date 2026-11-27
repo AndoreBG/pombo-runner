@@ -2,13 +2,8 @@ using UnityEngine;
 
 namespace PigeonRooftopRush
 {
-    // ---------------------------------------------------------------------
-    // ObstacleFactory — cria os 5 obstáculos do MVP, as 2 correntes de ar
-    // e o cenário decorativo com primitivas estilizadas (plano, E1: os
-    // "prefabs" são construídos em runtime pelas factories).
-    //
-    //  1 Prédio    2 Antena    3 Fio elétrico    4 Outdoor    5 Árvore
-    // ---------------------------------------------------------------------
+
+
     public static class ObstacleFactory
     {
         private static readonly string[] ObstacleKeys =
@@ -36,7 +31,6 @@ namespace PigeonRooftopRush
             new Color(0.51f, 0.56f, 0.63f)
         };
 
-        // ------------------------------------------------------- obstáculos
 
         public static GameObject CreateBuilding()
         {
@@ -69,8 +63,7 @@ namespace PigeonRooftopRush
             Sphere(root.transform, new Vector3(0.34f, 0.34f, 0.34f),
                 new Vector3(0f, h + 1.1f, 0f), MaterialFactory.Flat(new Color(0.95f, 0.25f, 0.22f)));
 
-            // colisão "confortável": mastro + base (a base tem 1,6 m — sem o
-            // segundo collider dava para atravessar a visual sem morrer)
+
             AddBox(root, new Vector3(0.7f, h + 1.4f, 0.7f), new Vector3(0f, (h + 1.4f) * 0.5f, 0f));
             AddBox(root, new Vector3(1.6f, 1f, 1.6f), new Vector3(0f, 0.5f, 0f));
             AddMarker(root);
@@ -83,10 +76,10 @@ namespace PigeonRooftopRush
             var root = NewRoot("Obstacle_Wire");
             float y = Random.Range(4f, 16f);
 
-            // fio atravessa a pista inteira (fixado em x=0 pelo SpawnManager)
+
             Cube(root.transform, new Vector3(17f, 0.5f, 0.4f),
                 new Vector3(0f, y, 0f), MaterialFactory.Flat(new Color(0.14f, 0.14f, 0.16f)));
-            // postes decorativos nas pontas (inalcançáveis: bounds ±7.5)
+
             Cube(root.transform, new Vector3(0.35f, y, 0.35f),
                 new Vector3(-8.4f, y * 0.5f, 0f), MaterialFactory.Flat(new Color(0.35f, 0.3f, 0.26f)));
             Cube(root.transform, new Vector3(0.35f, y, 0.35f),
@@ -107,7 +100,7 @@ namespace PigeonRooftopRush
                 new Vector3(0f, y, 0f), MaterialFactory.Flat(face));
             Cube(root.transform, new Vector3(6.9f, 3.0f, 0.35f),
                 new Vector3(0f, y, 0.35f), MaterialFactory.Flat(Darker(face)));
-            // suportes decorativos
+
             Cube(root.transform, new Vector3(0.3f, y, 0.3f),
                 new Vector3(-2.4f, y * 0.5f, 0.4f), MaterialFactory.Flat(new Color(0.33f, 0.35f, 0.38f)));
             Cube(root.transform, new Vector3(0.3f, y, 0.3f),
@@ -134,7 +127,6 @@ namespace PigeonRooftopRush
             return root;
         }
 
-        // --------------------------------------------------------- ventos
 
         public static GameObject CreateWind(WindType type)
         {
@@ -173,7 +165,6 @@ namespace PigeonRooftopRush
             return root;
         }
 
-        // --------------------------------------------------------- cenário
 
         public static GameObject CreateDecorBuilding()
         {
@@ -201,7 +192,6 @@ namespace PigeonRooftopRush
             return root;
         }
 
-        // ------------------------------------------------------- helpers
 
         private static GameObject NewRoot(string name)
         {
